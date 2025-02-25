@@ -6,28 +6,28 @@ The English explanation follows.
 本モジュールは、無向リンクと交差点ノードからなるマクロな道路ネットワークを基盤とし、そこから歩行者と車両の詳細な動態を表現するミクロなネットワークを構築するための Python モジュールである。具体的には、交差点を拡張して出入口（出入）ノードを生成し、各層ごとに有向リンク（遷移リンク）を付加することで、歩行者と車両の移動を個別に解析可能なネットワークを作成する。さらに、各リンクは中点で分割され、リンクの重みは分割後に半分に調整され、双方向リンクは別々の識別子が付与される。
 
 ## 基本的な手法とその意図
-・まず、車道の両外側に歩行空間を配置する。これにより、歩行者と車両を別のレイヤーとして扱い、各々の移動特性に基づいた解析が可能となる。
-・次に、交差点を拡張し、車両の直進、右折、左折を表す遷移リンクを挿入する。これにより、交差点内での車両の詳細な動作が再現される。
-・さらに、交差点を拡張することで、車両の遷移リンクの外側に、歩行者がどの道路を横断するかを示す遷移リンクを挿入する。これにより、歩行者の横断動作を明確に表現する。
-・また、道路区間は中点で分割することで、交差点だけでなく、道路区間起点での出発・到着（OD）を正確に表現できるようにしている。
+- まず、車道の両外側に歩行空間を配置する。これにより、歩行者と車両を別のレイヤーとして扱い、各々の移動特性に基づいた解析が可能となる。
+- 次に、交差点を拡張し、車両の直進、右折、左折を表す遷移リンクを挿入する。これにより、交差点内での車両の詳細な動作が再現される。
+- さらに、交差点を拡張することで、車両の遷移リンクの外側に、歩行者がどの道路を横断するかを示す遷移リンクを挿入する。これにより、歩行者の横断動作を明確に表現する。
+- また、道路区間は中点で分割することで、交差点だけでなく、道路区間起点での出発・到着（OD）を正確に表現できるようにしている。
 
 ## ファイル構成
-・main.py
-　　… 全体の処理パイプライン（前処理、層分離、各ネットワークの拡張、リンク分割、座標補正、出力）を実行するエントリーポイント。
-・processing.py
-　　… ネットワークの拡張、遷移リンク生成、統合、縮約、リンク分割、表示用座標補正、出力処理など各種関数を実装。
-・utils.py
-　　… 座標変換支援クラス（RD）や平均角度算出関数（average_angle）などの共通機能を提供。
-・my_io.py
-　　… 設定ファイル（config.ini）の読み込みおよびデータの入出力を行う。
-・config.ini
-　　… 入力データパス、出力ディレクトリ、座標系などの設定ファイル。
+- main.py
+    - 全体の処理パイプライン（前処理、層分離、各ネットワークの拡張、リンク分割、座標補正、出力）を実行するエントリーポイント。
+- processing.py
+    - ネットワークの拡張、遷移リンク生成、統合、縮約、リンク分割、表示用座標補正、出力処理など各種関数を実装。
+- utils.py
+    - 座標変換支援クラス（RD）や平均角度算出関数（average_angle）などの共通機能を提供。
+- my_io.py
+    - 設定ファイル（config.ini）の読み込みおよびデータの入出力を行う。
+- config.ini
+    - 入力データパス、出力ディレクトリ、座標系などの設定ファイル。
 
 ## 使用方法
 
 必要な Python パッケージ（pandas、numpy、geopandas、networkx、shapely など）をインストールする。
 config.ini の内容を適宜編集し、入力データ、出力先、CRS 等の設定を行う。
-```main.py
+```python:main.py
 # --- ステップ1: ライブラリのインポート ---
 from ioput import load_config, load_input_data  
 from processing import (
@@ -94,9 +94,9 @@ if __name__ == "__main__":
 これにより、最終的なネットワークデータ（ノード：CSV、リンク：GeoJSON）が出力される。
 
 ## 補足
-・歩行者ネットワークでは、車道側の外側に出入口ノードを配置し、両側それぞれに有向リンクペア（計 4 本）のうち、片側ごとに異なる bidirectionalpair_id を設定する。
-・車両ネットワークでは、歩道側の内側に出入口ノードを配置し、両側合わせて 2 本の有向リンクペアを構成する。
-・リンク分割では、各リンクを中点で分割し、新たに生成された中間ノードには "split" 列に 1 を設定するとともに、元リンクの macro_link 情報を _original_link_id（後に macro_link_id として出力）に引き継ぐ。さらに、分割後のリンクの重みは元の半分となる。
+- 歩行者ネットワークでは、車道側の外側に出入口ノードを配置し、両側それぞれに有向リンクペア（計 4 本）のうち、片側ごとに異なる bidirectionalpair_id を設定する。
+- 車両ネットワークでは、歩道側の内側に出入口ノードを配置し、両側合わせて 2 本の有向リンクペアを構成する。
+- リンク分割では、各リンクを中点で分割し、新たに生成された中間ノードには "split" 列に 1 を設定するとともに、元リンクの macro_link 情報を _original_link_id（後に macro_link_id として出力）に引き継ぐ。さらに、分割後のリンクの重みは元の半分となる。
 
 ## 謝辞
 この成果の一部は，NEDO（国立研究開発法人新 エネルギー・産業技術総合開発機構）の委託業務 （JPNP23023）の結果得られたものです．
@@ -112,22 +112,22 @@ This repository contains a Python module for constructing a detailed network tha
 The core idea of this module is to separate pedestrian and vehicular movements by layering them on different portions of the road space. First, additional nodes are generated at intersections to serve as entry/exit (or “in/out”) points. In the pedestrian layer, these nodes are positioned on the outer side of the roadway (i.e., on the vehicle side), and directional links are constructed in pairs—one for each direction—so that, in total, there are four links per intersection (two for each side). In contrast, in the vehicular layer, the entry/exit nodes are placed on the inner side (i.e., adjacent to the sidewalk), and a single pair of directional links is generated to represent turning movements such as left, straight, or right. Furthermore, each road segment is split at its midpoint to accurately represent origin–destination (OD) pairs that originate from the road segments rather than the intersections.
 
 ## File Structure
-main.py
-The entry point for running the entire processing pipeline, including preprocessing, network extension, link splitting, coordinate adjustment, and final export.
-processing.py
-Implements functions for data preprocessing, network extension (computing link centers and generating entry/exit nodes), generating transition links, integrating and contracting the network, performing link splitting, adjusting display coordinates, and exporting the final data.
-utils.py
-Contains common utilities such as the RD (relative coordinate conversion) class and an average angle calculation function.
-my_io.py
-Handles input/output operations and reads the configuration file.
-config.ini
-Contains settings for input data paths, output directories, coordinate reference systems (CRS), etc.
+- main.py
+    - The entry point for running the entire processing pipeline, including preprocessing, network extension, link splitting, coordinate adjustment, and final export.
+- processing.py
+    - Implements functions for data preprocessing, network extension (computing link centers and generating entry/exit nodes), generating transition links, integrating and contracting the network, performing link splitting, adjusting display coordinates, and exporting the final data.
+- utils.py
+    - Contains common utilities such as the RD (relative coordinate conversion) class and an average angle calculation function.
+- my_io.py
+    - Handles input/output operations and reads the configuration file.
+- config.ini
+    - Contains settings for input data paths, output directories, coordinate reference systems (CRS), etc.
 
 ## Usage
 Install the required Python packages (e.g., pandas, numpy, geopandas, networkx, shapely).
 Edit the config.ini file as needed to specify your input data paths, output directory, and CRS settings.
 
-```main.py
+```python:main.py
 # --- Step 1: Import libraries ---
 from ioput import load_config, load_input_data  
 from processing import (
@@ -196,3 +196,4 @@ The final network data will be exported as CSV files (for nodes) and GeoJSON fil
 
 ## Citation
 If you use this repository or any part of the code/algorithms presented herein, please cite the following paper:
+Hasada, H., Ikeya, F., Toriumi, A., Honma, Y., Oguchi, T. (2025). “Development of pedestrian-vehicle networks and theoretical methodology for defining pedestrian protection zones.” In Proceedings of infrastructure planning (in press).
