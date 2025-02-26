@@ -1,4 +1,4 @@
-# hosha-network
+# hosha-network （歩車ネットワーク）
 
 The English explanation follows. 
 
