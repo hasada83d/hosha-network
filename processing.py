@@ -65,6 +65,43 @@ def reorder_macro(macro):
     except Exception:
         return ""
 
+def access_from_drm(row):
+    restriction_mapping = {
+        1: "both_B",
+        2: "pedestrian",
+        3: "pedestrian",
+        4: "both_FT",
+        5: "both_TF",
+        6: "both_FT",
+        7: "both_TF",
+        8: "both_B",
+        0: "both_B"
+    }
+
+    # 道路種別コードによる高速道路判定
+    vehicle_only_types = {1, 2}  # 高速自動車国道、都市高速
+
+    try:
+        restriction_code = int(row["DrmLimitCode"])
+    except:
+        restriction_code = 0
+    try:
+        road_type_code = int(row["DrmRoadKindCode"])
+    except:
+        road_type_code = 0
+
+    # 基本access（歩行者 or 車両 or 両用）
+    access = restriction_mapping.get(restriction_code, "both_B")
+
+    # 高速道路は常に vehicle のみ（pedestrian も削除）
+    if road_type_code in vehicle_only_types:
+        if access == "pedestrian":
+            return "none"
+        if access.startswith("both"):
+            return "vehicle_"+access[5:]
+        return "vehicle_B"
+
+    return access
 
 # === オリジナルデータ前処理 ===
 def preprocess_original_links(ori_link):
@@ -79,6 +116,8 @@ def preprocess_original_links(ori_link):
     ori_link["weight"] = ori_link["DrmLength"].astype(float).fillna(0)
     ori_link["dummy"] = 0
     ori_link.index = ori_link["id"]
+    
+    ori_link["access"] = ori_link.apply(lambda x:access_from_drm(x),axis=1)
     ori_link = calc_macro_link(ori_link, s_col="s", t_col="t")
     return ori_link
 
@@ -86,7 +125,7 @@ def preprocess_original_nodes(ori_node, processed_link):
     ori_node["id"] = ori_node["Drm0NodeID"].astype("int64")
     mask = ori_node["id"] < 100000
     if mask.any():
-        ori_node.loc[mask, "id"] = ori_node.loc[mask, "id"] + 533967 * 100000
+        ori_node.loc[mask, "id"] = ori_node.loc[mask, "id"] + 999999 * 100000
     ori_node = ori_node.drop_duplicates(subset=["id"])
     valid_ids = set(processed_link["s"].values) | set(processed_link["t"].values)
     ori_node = ori_node[ori_node["id"].isin(valid_ids)]
@@ -101,10 +140,32 @@ def preprocess_original_nodes(ori_node, processed_link):
     return ori_node
 
 def branch_network_types(processed_link, processed_node):
-    walk_link = processed_link.copy()
+    """
+    入力された processed_link DataFrame（access 属性を含む）と processed_node を
+    もとに、歩行者ネットワーク用と車両ネットワーク用に分岐する関数。
+    
+    具体的には、
+      - 歩行者ネットワークには、access が "pedestrian" または "both_～" のリンクを採用。
+      - 車両ネットワークには、access が "vehicle_～" または "both_～" のリンクを採用。
+    なお、"none" やその他不適格なものは含まれません。
+    
+    Returns:
+      walk_link, walk_node, veh_link, veh_node : 各ネットワーク用の DataFrame
+    """
+    # 歩行者ネットワーク: access が "pedestrian" もしくは "both" で始まるもの
+    walk_mask = (processed_link["access"] == "pedestrian") | \
+                (processed_link["access"].str.startswith("both"))
+    walk_link = processed_link[walk_mask].copy()
+
+    # 車両ネットワーク: access が "vehicle" で始まるものまたは "both" で始まるもの
+    veh_mask = processed_link["access"].str.startswith("vehicle") | \
+               (processed_link["access"].str.startswith("both"))
+    veh_link = processed_link[veh_mask].copy()
+
+    # 現状、ノードはリンク分割後の参照に利用するので、共通の processed_node をそのまま用いる
     walk_node = processed_node.copy()
-    veh_link = processed_link.copy()
-    veh_node = processed_node.copy()
+    veh_node  = processed_node.copy()
+
     return walk_link, walk_node, veh_link, veh_node
 
 # === 共通処理：リンク中心座標計算 ===
@@ -127,7 +188,8 @@ def compute_link_centers(net_link, net_node):
 def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1, extra_filter_func=None, new_node_start=0):
     """
     指定された属性（例："intersection"）に基づいて新規 in/out ノードを生成する関数。
-    ※ hashi 関連はカットし、対象は "intersection" のみです。
+    本改修では、各接続リンクの access 属性と、リンク端点（s/t）が base node と一致するかで、
+    生成するノードタイプ（in, out）を条件分岐する。
     
     Returns:
       (new_nodes, next_index)
@@ -145,38 +207,76 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
         base_id = base_node["id"]
         origin_x, origin_y = base_node["x"], base_node["y"]
         RD.set_origin(origin_x, origin_y)
+        # base_id に接続しているリンクを抽出
         cond = (link_df["s"] == base_id) | (link_df["t"] == base_id)
         connected_links = link_df[cond]
         if extra_filter_func is not None:
             connected_links = connected_links[extra_filter_func(connected_links)]
         for _, link_row in connected_links.iterrows():
-            link_id = link_row["id"]
+            # そのリンクの access 属性を取得
+            access = link_row.get("access", "both_B")
+            # 判定用: base node がリンクのどちら側か
+            role = None
+            if base_id == link_row["s"]:
+                role = 1  # base はリンクのノード1側
+            elif base_id == link_row["t"]:
+                role = 2    # base はリンクのノード2側
+            else:
+                continue  # どちらにも属さない場合はスキップ
+            
+            # RD を用いてリンク中心からの極座標 (r, degree) を取得
             cx = link_row["center_x"]
             cy = link_row["center_y"]
             r, degree = RD.getRD(cx, cy)
-            # out ノード: 角度 + offset_angle
-            out_x, out_y = RD.getXY(scale, degree + offset_angle)
-            new_nodes.append({
-                "id": new_node_index, #f"new_{new_node_index}",
-                "x": out_x,
-                "y": out_y,
-                "original_id": base_id,
-                "_original_link_id": link_id,
-                "in_out": "out"
-            })
-            new_node_index += 1
-            # in ノード: 角度 - offset_angle
-            in_x, in_y = RD.getXY(scale, degree - offset_angle)
-            new_nodes.append({
-                "id": new_node_index, #f"new_{new_node_index}",
-                "x": in_x,
-                "y": in_y,
-                "original_id": base_id,
-                "_original_link_id": link_id,
-                "in_out": "in"
-            })
-            new_node_index += 1
+            
+            # 生成対象ノードの判断
+            # デフォルトは、何も条件に該当しなければ両方生成する（従来の挙動）
+            create_out = True
+            create_in = True
+            
+            if role == 1:
+                # ノード1側：リンクの流れが s -> t
+                # "both_FT"・"vehicle_FT"の場合、出る側のみ生成；"both_TF"・"vehicle_TF"の場合は生成しない
+                if access in {"both_FT", "vehicle_FT"}:
+                    create_in = False
+                elif access in {"both_TF", "vehicle_TF"}:
+                    create_out = False
+                # "both_B" や "pedestrian"の場合は、両方生成（従来通り）
+            elif role == 2:
+                # ノード2側：リンクの流れが s -> t なら、t は着く側
+                if access in {"both_FT", "vehicle_FT"}:
+                    create_out = False
+                elif access in {"both_TF", "vehicle_TF"}:
+                    create_in = False
+            
+            # ※ 万が一 access の値が未定義なら、両方生成
+            # 以下、各生成条件に応じてノードを生成
+            if create_out:
+                # out ノード: 角度 + offset_angle
+                out_x, out_y = RD.getXY(scale, degree + offset_angle)
+                new_nodes.append({
+                    "id": new_node_index,
+                    "x": out_x,
+                    "y": out_y,
+                    "original_id": base_id,
+                    "_original_link_id": link_row["id"],
+                    "in_out": "out"
+                })
+                new_node_index += 1
+            if create_in:
+                # in ノード: 角度 - offset_angle
+                in_x, in_y = RD.getXY(scale, degree - offset_angle)
+                new_nodes.append({
+                    "id": new_node_index,
+                    "x": in_x,
+                    "y": in_y,
+                    "original_id": base_id,
+                    "_original_link_id": link_row["id"],
+                    "in_out": "in"
+                })
+                new_node_index += 1
     return new_nodes, new_node_index
+
 
 def generate_augmented_nodes(net_link, net_node, offset_angle, scale):
     """
@@ -223,9 +323,6 @@ def generate_normal_links(ori_link, augmented_nodes):
             (augmented_nodes["_original_link_id"] == link_id) &
             (augmented_nodes["in_out"] == "out")
         ]
-        if candidates_source.empty:
-            continue
-        s_node = candidates_source.iloc[0]["id"]
 
         # 出入口ノードの探索（終点："in" ノードのみ）
         candidates_target = augmented_nodes[
@@ -233,19 +330,20 @@ def generate_normal_links(ori_link, augmented_nodes):
             (augmented_nodes["_original_link_id"] == link_id) &
             (augmented_nodes["in_out"] == "in")
         ]
-        if candidates_target.empty:
-            continue
-        t_node = candidates_target.iloc[0]["id"]
 
-        links.append({
-            "id": ii,
-            "s": s_node,
-            "t": t_node,
-            "original_id": link_id,
-            "_original_node_id": None,
-            "turn": None
-        })
-        ii += 1
+        if not (candidates_source.empty or candidates_target.empty):
+            s_node = candidates_source.iloc[0]["id"]
+            t_node = candidates_target.iloc[0]["id"]
+            
+            links.append({
+                "id": ii,
+                "s": s_node,
+                "t": t_node,
+                "original_id": link_id,
+                "_original_node_id": None,
+                "turn": None
+            })
+            ii += 1
         
         # 出入口ノードの探索（始点："out" ノードのみ）
         candidates_source = augmented_nodes[
@@ -253,9 +351,6 @@ def generate_normal_links(ori_link, augmented_nodes):
             (augmented_nodes["_original_link_id"] == link_id) &
             (augmented_nodes["in_out"] == "out")
         ]
-        if candidates_source.empty:
-            continue
-        s_node = candidates_source.iloc[0]["id"]
 
         # 出入口ノードの探索（終点："in" ノードのみ）
         candidates_target = augmented_nodes[
@@ -263,19 +358,20 @@ def generate_normal_links(ori_link, augmented_nodes):
             (augmented_nodes["_original_link_id"] == link_id) &
             (augmented_nodes["in_out"] == "in")
         ]
-        if candidates_target.empty:
-            continue
-        t_node = candidates_target.iloc[0]["id"]
 
-        links.append({
-            "id": ii,
-            "s": s_node,
-            "t": t_node,
-            "original_id": link_id,
-            "_original_node_id": None,
-            "turn": None
-        })
-        ii += 1
+        if not (candidates_source.empty or candidates_target.empty):
+            s_node = candidates_source.iloc[0]["id"]
+            t_node = candidates_target.iloc[0]["id"]
+            
+            links.append({
+                "id": ii,
+                "s": s_node,
+                "t": t_node,
+                "original_id": link_id,
+                "_original_node_id": None,
+                "turn": None
+            })
+            ii += 1
     return pd.DataFrame(links)
 
 # === ターンリンク生成 ===
@@ -402,9 +498,11 @@ def contract_network_nodes(G, pos, nodes_df, ori_nodes_df):
     各端点との角度の二等分角上に、両端からの距離の平均を半径とした点とする。
     """
     for u, v, data in list(G.edges(data=True)):
-        if data.get("turn", "") != "cross":
+        if (data.get("turn", "") != "cross"):
             continue
         if nodes_df.loc[u, "_original_link_id"] == nodes_df.loc[v, "_original_link_id"]:
+            continue
+        if nodes_df.loc[u, "in_out"] == nodes_df.loc[v, "in_out"]:
             continue
         orig_id = nodes_df.loc[u, "original_id"]
         if orig_id in ori_nodes_df["id"].values:
