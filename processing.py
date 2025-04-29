@@ -901,6 +901,8 @@ def export_final_network(final_nodes, final_links, config, suffix="raw"):
     gdf_nodes.loc[gdf_nodes["layer_id"] == 1, "in_out"] = ""
     
     nodes_csv_path = os.path.join(output_dir, f"final_nodes_{suffix}.csv")
+    gdf_nodes["x"]=gdf_nodes.geometry.x
+    gdf_nodes["y"]=gdf_nodes.geometry.y
     gdf_nodes.drop(columns="geometry").to_csv(nodes_csv_path, index=False)
     print(f"Final nodes exported to {nodes_csv_path}")
 
