@@ -763,6 +763,24 @@ def finalize_network(final_nodes, final_links, ori_links, ori_nodes):
     
     return final_nodes,links_merged
     
+def birdirectionzie_ped_links(final_nodes, final_links):
+    veh_mask = final_links["layer_id"] == 0
+    ped_mask = final_links["layer_id"] == 1
+    __veh_links = final_links.loc[veh_mask, :]
+    __ped_links = final_links.loc[ped_mask, :]
+    
+    _ped_links = __ped_links.copy()
+    _ped_links["s"]=__ped_links["t"]
+    _ped_links["t"]=__ped_links["s"]
+    _ped_links.loc[_ped_links["bidirectionalpair_id"]!=-1,"bidirectionalpair_id"]=_ped_links.loc[_ped_links["bidirectionalpair_id"]!=-1,"bidirectionalpair_id"]+".2"
+    
+    __ped_links.loc[__ped_links["bidirectionalpair_id"]!=-1,"bidirectionalpair_id"]=__ped_links.loc[__ped_links["bidirectionalpair_id"]!=-1,"bidirectionalpair_id"]+".1"
+    
+    _final_links = pd.concat([__veh_links,__ped_links,_ped_links])
+    _final_links["id"] = _final_links.reset_index().index
+    return final_nodes,_final_links
+    
+
 def split_links(final_nodes, final_links):
     """
     最終ネットワークのリンクデータについて、各リンクを幾何学的中点で分割し、2本のリンクに分割する。
@@ -946,7 +964,7 @@ def process_pedestrian_network(walk_link, walk_node):
     #print(len(walk_link))
     updated_links = compute_link_centers(walk_link, walk_node)
     #print(len(updated_links))
-    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=10, scale=1)
+    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=10, scale=1.0)
     turn_links = generate_turn_links(updated_nodes, walk_node)
     #print(len(turn_links))
     normal_links = generate_normal_links(walk_link, updated_nodes)
@@ -969,7 +987,7 @@ def process_vehicle_network(veh_link, veh_node):
       updated_veh_nodes, merged_veh_links : DataFrame（処理後の車両ネットワーク）
     """
     updated_links = compute_link_centers(veh_link, veh_node)
-    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=10, scale=0.5)
+    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=10, scale=0.3)
     turn_links = generate_turn_links_veh(updated_nodes, veh_node)
     normal_links = generate_normal_links(veh_link, updated_nodes)
     merged_links = integrate_turn_links(normal_links, turn_links)

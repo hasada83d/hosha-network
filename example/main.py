@@ -35,7 +35,8 @@ from processing import (
     adjust_display_coordinates,
     finalize_network,
     split_links,
-    export_final_network
+    export_final_network,
+    birdirectionzie_ped_links
 )
 
 def main():
@@ -63,7 +64,10 @@ def main():
     # --- ステップ8: リンクを分割 ---
     final_nodes, final_links = split_links(final_nodes, final_links)
     
-    # --- ステップ9: 表示用ノードの座標補正および最終データのエクスポート ---
+    # --- ステップ9: 歩行者ネットワークを双方向に ---
+    final_nodes, final_links = birdirectionzie_ped_links(final_nodes, final_links)
+    
+    # --- ステップ10: 表示用ノードの座標補正および最終データのエクスポート ---
     # 補正前の raw データをエクスポート
     export_final_network(final_nodes, final_links, config, suffix="raw")
     # 補正後の表示用データを作成してエクスポート
