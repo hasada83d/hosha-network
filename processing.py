@@ -504,7 +504,8 @@ def generate_turn_links_veh(nodes_df, ori_nodes_df):
             center = (group.iloc[0]["x"], group.iloc[0]["y"])
         for i, in_node in in_nodes.iterrows():
             angle_in = np.arctan2(in_node["y"] - center[1], in_node["x"] - center[0])
-            for j, out_node in out_nodes.iterrows():
+            _original_link_id = in_node["_original_link_id"]
+            for j, out_node in out_nodes[out_nodes["_original_link_id"]!=_original_link_id].iterrows():
                 angle_out = np.arctan2(out_node["y"] - center[1], out_node["x"] - center[0])
                 diff = np.arctan2(np.sin(angle_out - angle_in), np.cos(angle_out - angle_in))
                 if diff < 0:
