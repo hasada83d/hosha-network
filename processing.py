@@ -65,44 +65,6 @@ def reorder_macro(macro):
     except Exception:
         return ""
     
-def access_from_drm(row):
-    restriction_mapping = {
-        1: "both_B",
-        2: "pedestrian",
-        3: "pedestrian",
-        4: "both_FT",
-        5: "both_TF",
-        6: "both_FT",
-        7: "both_TF",
-        8: "both_B",
-        0: "both_B"
-    }
-
-    # 道路種別コードによる高速道路判定
-    vehicle_only_types = {1, 2}  # 高速自動車国道、都市高速
-
-    try:
-        restriction_code = int(row["DrmLimitCode"])
-    except:
-        restriction_code = 0
-    try:
-        road_type_code = int(row["DrmRoadKindCode"])
-    except:
-        road_type_code = 0
-
-    # 基本access（歩行者 or 車両 or 両用）
-    access = restriction_mapping.get(restriction_code, "both_B")
-
-    # 高速道路は常に vehicle のみ（pedestrian も削除）
-    if road_type_code in vehicle_only_types:
-        if access == "pedestrian":
-            return "none"
-        if access.startswith("both"):
-            return "vehicle_"+access[5:]
-        return "vehicle_B"
-
-    return access
-
 def access_from_undi_gmns(row):
     """
     GMNSフォーマットの行から access 列を作成。
@@ -137,21 +99,28 @@ def access_from_undi_gmns(row):
     # 4) facility_typeによる上書き（highway は車両専用）
     if facility_type in ["highway", "expressway", "motorway"]:
         base = "vehicle"
+    
+    if facility_type in ["footway"]:
+        base = "pedestrian"
 
     # 5) suffix の決定
     if df == 1:
-        suffix = "FT"
+        suffix0 = "FT"
     elif df == -1:
-        suffix = "TF"
+        suffix0 = "TF"
     else:
-        suffix = "B"
+        suffix0 = "B"
+    
+    if df == 1 and facility_type in ["motorway", "trunk", "primary", "secondary"]:
+        suffix1 = "FT"
+    elif df == -1 and facility_type in ["motorway", "trunk", "primary", "secondary"]:
+        suffix1 = "TF"
+    elif facility_type in ["footway","gaishu"]:
+        suffix1 = "TF"
+    else:
+        suffix1 = "B"
 
-    # 6) access 文字列の生成
-    if base == "none":
-        return "none"
-    if base == "pedestrian":
-        return "pedestrian"
-    return f"{base}_{suffix}"
+    return f"{base}_{suffix0}_{suffix1}"
 
 # === オリジナルデータ前処理 ===
 def preprocess_original_links(ori_link):
@@ -165,7 +134,8 @@ def preprocess_original_links(ori_link):
     ori_link["dummy"] = 0
     ori_link.index = ori_link["id"]
     
-    ori_link["access"] = ori_link.apply(lambda x:access_from_undi_gmns(x),axis=1)
+    if "access" not in ori_link.columns:
+        ori_link["access"] = ori_link.apply(lambda x:access_from_undi_gmns(x),axis=1)
     ori_link = calc_macro_link(ori_link, s_col="s", t_col="t")
     return ori_link
 
@@ -198,7 +168,7 @@ def branch_network_types(processed_link, processed_node):
       walk_link, walk_node, veh_link, veh_node : 各ネットワーク用の DataFrame
     """
     # 歩行者ネットワーク: access が "pedestrian" もしくは "both" で始まるもの
-    walk_mask = (processed_link["access"] == "pedestrian") | \
+    walk_mask = (processed_link["access"].str.startswith("pedestrian")) | \
                 (processed_link["access"].str.startswith("both"))
     walk_link = processed_link[walk_mask].copy()
 
@@ -230,7 +200,7 @@ def compute_link_centers(net_link, net_node):
     return net_link
 
 # === 共通処理：新規ノード生成 ===
-def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1, extra_filter_func=None, new_node_start=0):
+def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1, extra_filter_func=None, new_node_start=0,access_suffix=0):
     """
     指定された属性（例："intersection"）に基づいて新規 in/out ノードを生成する関数。
     本改修では、各接続リンクの access 属性と、リンク端点（s/t）が base node と一致するかで、
@@ -259,7 +229,7 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
             connected_links = connected_links[extra_filter_func(connected_links)]
         for _, link_row in connected_links.iterrows():
             # そのリンクの access 属性を取得
-            access = link_row.get("access", "both_B")
+            access = link_row.get("access", "both_B_B").split("_")[access_suffix+1]
             # 判定用: base node がリンクのどちら側か
             role = None
             if base_id == link_row["s"]:
@@ -282,16 +252,16 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
             if role == 1:
                 # ノード1側：リンクの流れが s -> t
                 # "both_FT"・"vehicle_FT"の場合、出る側のみ生成；"both_TF"・"vehicle_TF"の場合は生成しない
-                if access in {"both_FT", "vehicle_FT"}:
+                if access in {"FT"}:
                     create_in = False
-                elif access in {"both_TF", "vehicle_TF"}:
+                elif access in {"TF"}:
                     create_out = False
                 # "both_B" や "pedestrian"の場合は、両方生成（従来通り）
             elif role == 2:
                 # ノード2側：リンクの流れが s -> t なら、t は着く側
-                if access in {"both_FT", "vehicle_FT"}:
+                if access in {"FT"}:
                     create_out = False
-                elif access in {"both_TF", "vehicle_TF"}:
+                elif access in {"TF"}:
                     create_in = False
             
             # ※ 万が一 access の値が未定義なら、両方生成
@@ -323,7 +293,7 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
     return new_nodes, new_node_index
 
 
-def generate_augmented_nodes(net_link, net_node, offset_angle, scale):
+def generate_augmented_nodes(net_link, net_node, offset_angle, scale, access_suffix):
     """
     新規ノード生成のみを行う関数。
     "intersection" 属性を持つノードに対して、RD クラスと generate_inout_nodes を利用し、
@@ -338,7 +308,8 @@ def generate_augmented_nodes(net_link, net_node, offset_angle, scale):
         offset_angle=offset_angle,
         scale=scale,
         extra_filter_func=None,
-        new_node_start=0
+        new_node_start=0,
+        access_suffix=access_suffix
     )
     if new_nodes:
         new_nodes_df = pd.DataFrame(new_nodes)
@@ -433,7 +404,7 @@ def generate_turn_links(nodes_df, ori_nodes_df, threshold_deg=45):
     link_index = 0 
     threshold_rad = threshold_deg * np.pi / 180.0 
     for orig_id, group in nodes_df.groupby("original_id"):
-        if group.shape[0] <= 2:
+        if group.shape[0] < 2:
             continue
         # ここで、元データから中心点を取得する
         if orig_id in ori_nodes_df["id"].values:
@@ -480,7 +451,7 @@ def generate_turn_links(nodes_df, ori_nodes_df, threshold_deg=45):
     return pd.DataFrame(link_list)
 
 
-def generate_turn_links_veh(nodes_df, ori_nodes_df):
+def generate_turn_links_veh(nodes_df, ori_nodes_df, ori_links_df):
     """
     車両ネットワーク用のターンリンク生成関数。
     各交差点（nodes_df の original_id ごと）で、in ノードと out ノードの全組み合わせに対して、
@@ -488,6 +459,8 @@ def generate_turn_links_veh(nodes_df, ori_nodes_df):
     Returns:
       DataFrame（columns: ["id", "s", "t", "original_id", "turn"]）
     """
+    link_centers = ori_links_df.set_index("id")[["center_x", "center_y"]].to_dict("index")
+    
     link_list = []
     link_index = 0
     for orig_id, group in nodes_df.groupby("original_id"):
@@ -503,10 +476,17 @@ def generate_turn_links_veh(nodes_df, ori_nodes_df):
         else:
             center = (group.iloc[0]["x"], group.iloc[0]["y"])
         for i, in_node in in_nodes.iterrows():
-            angle_in = np.arctan2(in_node["y"] - center[1], in_node["x"] - center[0])
-            _original_link_id = in_node["_original_link_id"]
-            for j, out_node in out_nodes[out_nodes["_original_link_id"]!=_original_link_id].iterrows():
-                angle_out = np.arctan2(out_node["y"] - center[1], out_node["x"] - center[0])
+            in_link_id = in_node["_original_link_id"]
+            if in_link_id not in link_centers:
+                continue
+            in_cx, in_cy = link_centers[in_link_id]["center_x"], link_centers[in_link_id]["center_y"]
+            angle_in = np.arctan2(in_cy - center[1], in_cx - center[0])
+            for j, out_node in out_nodes[out_nodes["_original_link_id"]!=in_link_id].iterrows():
+                out_link_id = out_node["_original_link_id"]
+                if out_link_id not in link_centers:
+                    continue
+                out_cx, out_cy = link_centers[out_link_id]["center_x"], link_centers[out_link_id]["center_y"]
+                angle_out = np.arctan2(out_cy - center[1], out_cx - center[0])
                 diff = np.arctan2(np.sin(angle_out - angle_in), np.cos(angle_out - angle_in))
                 if diff < 0:
                     diff += 2 * np.pi
@@ -951,7 +931,7 @@ def export_final_network(final_nodes, final_links, config, suffix="raw"):
     print(f"Final links exported to {links_geojson_path}")
 
 # === ネットワーク全体処理パイプライン（歩行者） ===
-def process_pedestrian_network(walk_link, walk_node):
+def process_pedestrian_network(walk_link, walk_node, contract="partial"):
     """
     歩行者ネットワークの全体処理パイプライン
       1. compute_link_centers によりリンク中心座標を計算
@@ -965,13 +945,16 @@ def process_pedestrian_network(walk_link, walk_node):
     #print(len(walk_link))
     updated_links = compute_link_centers(walk_link, walk_node)
     #print(len(updated_links))
-    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=10, scale=1.0)
+    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=10, scale=1.0,access_suffix=1)
     turn_links = generate_turn_links(updated_nodes, walk_node)
     #print(len(turn_links))
     normal_links = generate_normal_links(walk_link, updated_nodes)
     merged_links = integrate_turn_links(normal_links, turn_links)
     #print(len(merged_links))
-    final_nodes, final_links = contract_network_and_extract(updated_nodes, merged_links, walk_node)
+    if contract=="partial":
+        final_nodes, final_links = contract_network_and_extract(updated_nodes, merged_links, walk_node)
+    elif contract=="none":
+        final_nodes, final_links = updated_nodes, merged_links
     #print(len(final_links))
     return final_nodes, final_links
 
@@ -988,8 +971,8 @@ def process_vehicle_network(veh_link, veh_node):
       updated_veh_nodes, merged_veh_links : DataFrame（処理後の車両ネットワーク）
     """
     updated_links = compute_link_centers(veh_link, veh_node)
-    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=10, scale=0.3)
-    turn_links = generate_turn_links_veh(updated_nodes, veh_node)
+    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=10, scale=0.5,access_suffix=0)
+    turn_links = generate_turn_links_veh(updated_nodes, veh_node, updated_links)
     normal_links = generate_normal_links(veh_link, updated_nodes)
     merged_links = integrate_turn_links(normal_links, turn_links)
     return updated_nodes, merged_links

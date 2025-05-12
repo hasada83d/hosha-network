@@ -52,7 +52,7 @@ def main():
     walk_link, walk_node, veh_link, veh_node = branch_network_types(processed_link, processed_node)
     
     # --- ステップ5: 歩行者ネットワークの全体処理 ---
-    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node)
+    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node,contract="none")
     
     # --- ステップ6: 車両ネットワークの全体処理 ---
     updated_veh_nodes, updated_veh_links = process_vehicle_network(veh_link, veh_node)
