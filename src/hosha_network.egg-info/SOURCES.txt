@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+src/hosha-network/__init__.py
+src/hosha-network/interface.py
+src/hosha-network/ioput.py
+src/hosha-network/processing.py
+src/hosha-network/utils.py
+src/hosha_network.egg-info/PKG-INFO
+src/hosha_network.egg-info/SOURCES.txt
+src/hosha_network.egg-info/dependency_links.txt
+src/hosha_network.egg-info/requires.txt
+src/hosha_network.egg-info/top_level.txt
+tests/test_sample_run.py

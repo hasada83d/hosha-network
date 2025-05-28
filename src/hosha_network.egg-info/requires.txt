@@ -1,0 +1,11 @@
+pandas
+geopandas
+numpy
+networkx
+shapely
+
+[dev]
+pytest
+black
+build
+twine
