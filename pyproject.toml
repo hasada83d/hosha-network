@@ -9,7 +9,7 @@ description = "A Python library to construct detailed pedestrian-vehicle layered
 authors = [
     { name="Hiroyuki Hasada", email="important83d@email.com" }
 ]
-license = { file = "MIT LICENSE" }
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
@@ -29,5 +29,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["hosha_network"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
