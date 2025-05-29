@@ -14,19 +14,19 @@ hosha-networkは，無向リンクと交差点ノードからなるマクロな�
 
 - 🚶‍♂️ Separate layers for pedestrians and vehicles: Sidewalks are generated on both sides of vehicle lanes, enabling independent analysis for pedestrians and vehicles.
  
-　　歩行空間のレイヤー分離：車道の両外側に歩行空間を設けることで、歩行者と車両を別レイヤーで扱い、それぞれの移動特性に基づいた解析が可能になります。
+　　歩行空間のレイヤー分離：車道の両外側に歩行空間を設けることで，歩行者と車両を別レイヤーで扱い，それぞれの移動特性に基づいた解析が可能になります. 
   
 - 🔁 Vehicle Turning movement representation: Transition links for vehicle right-turn, left-turn, and straight movement are inserted to represent detailed behavior at intersections.
  
-　　車両の遷移動作の明示：直進・右左折を表す遷移リンクを交差点に挿入し、車両の交差点内の詳細な動作を再現します。
+　　車両の遷移動作の明示：直進・右左折を表す遷移リンクを交差点に挿入し，車両の交差点内の詳細な動作を再現します. 
   
 - 🚸 Pedestrian crossing movement representation: Crossing links for pedestrians are placed around vehicular transitions, clearly capturing pedestrian crossing behavior.
  
-　　歩行者の横断行動の明示：車両の遷移リンクの外側に歩行者用の横断リンクを設け、横断行動を明確に表現します。
+　　歩行者の横断行動の明示：車両の遷移リンクの外側に歩行者用の横断リンクを設け，横断行動を明確に表現します. 
   
 - 📍 Midlink segmentation: Road segments are divided at their midpoints, enabling precise modeling of trip origins and destinations even along road sections.
 
-　　中点での道路分割：歩行空間・車道リンクは中点で分割され、交差点以外の道路区間でも正確な出発・到着（OD）表現が可能になります。
+　　中点での道路分割：歩行空間・車道リンクは中点で分割され，交差点以外の道路区間でも正確な出発・到着（OD）表現が可能になります. 
 
 ## Citation 引用
 Coming soon!
@@ -58,23 +58,23 @@ develop_hosha_network(link_gdf, node_df, crs, output_dir, contract=False, export
 
 This function generates a layered pedestrian-vehicle network from macro-level road data in GMNS format, assuming a planar (Cartesian) coordinate system such as UTM.
 
-本関数は、平面直交座標系（例: UTM）を前提として、GMNS形式のマクロ道路データから歩車分離ネットワークを構築します。
+本関数は、平面直交座標系（例: UTM）を前提として，GMNS形式のマクロ道路データから歩車分離ネットワークを構築します. 
 
 **Parameters 引数:**
 
 English
-- `link_gdf`: GeoDataFrame with columns: `link_id`, `from_node_id`, to_node_id`, `geometry`  (follows [GMNS format]([url](https://github.com/zephyr-data-specs/GMNS)))
-- `node_df`: DataFrame with columns: `node_id`, `x_coord, `y_coord`  (follows [GMNS format]([url](https://github.com/zephyr-data-specs/GMNS)))
+- `link_gdf`: GeoDataFrame with columns: `link_id`, `from_node_id`, to_node_id`, `geometry`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
+- `node_df`: DataFrame with columns: `node_id`, `x_coord, `y_coord`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
 - `crs`: Coordinate Reference System (EPSG code). The module currently supports only planar (Cartesian) coordinate systems such as UTM.
-- `output_dir`: Output directory for saving results
-- `contract`: Whether to contract intermediate nodes (default: False)
-- `export_display`: Whether to export scaled coordinate data for visualization (default: True)
+- `output_dir`: Output directory for saving results.
+- `contract`: Whether to contract intermediate nodes (default: False).
+- `export_display`: Whether to export scaled coordinate data for visualization (default: True).
 
 日本語
-- `link_gdf`: `link_id`, `from_node_id`, to_node_id`, `geometry` を含む GeoDataFrame ([GMNS format]([url](https://github.com/zephyr-data-specs/GMNS))に準拠)
-- `node_df`: `node_id`, `x_coord, `y_coord`を含む DataFrame ([GMNS format]([url](https://github.com/zephyr-data-specs/GMNS))に準拠)
-- `crs`: 使用する座標系（EPSGコード）。本モジュールは平面直交座標系（例: UTM）のみ対応しています。
-- `output_dir`: 結果を保存する出力先ディレクトリ
-- `contract`: 中間ノードの縮約を実行するか（デフォルト: False）
-- `export_display`: 表示用のスケーリング出力も行うか（デフォルト: True）
+- `link_gdf`: `link_id`, `from_node_id`, to_node_id`, `geometry` を含む GeoDataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
+- `node_df`: `node_id`, `x_coord, `y_coord`を含む DataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
+- `crs`: 使用する座標系（EPSGコード）. 本モジュールは平面直交座標系のみ対応しています. 
+- `output_dir`: 結果を保存する出力先ディレクトリ. 
+- `contract`: 中間ノードの縮約を実行するか（デフォルト: False）. 
+- `export_display`: 表示用のスケーリング出力も行うか（デフォルト: True）. 
 
