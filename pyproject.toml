@@ -9,7 +9,7 @@ description = "A Python library to construct detailed pedestrian-vehicle layered
 authors = [
     { name="Hiroyuki Hasada", email="important83d@email.com" }
 ]
-license = { file = "LICENSE" }
+license = { file = "MIT LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
