@@ -11,13 +11,21 @@ hosha-networkは，無向リンクと交差点ノードからなるマクロな�
  <img src="https://github.com/user-attachments/assets/b713aff6-0bf2-4642-9b90-cd57b8c5f451" width="50%" />
 
 ## Features 特徴
+
 - 🚶‍♂️ Separate layers for pedestrians and vehicles: Sidewalks are generated on both sides of vehicle lanes, enabling independent analysis for pedestrians and vehicles.
+ 
 　　歩行空間のレイヤー分離：車道の両外側に歩行空間を設けることで、歩行者と車両を別レイヤーで扱い、それぞれの移動特性に基づいた解析が可能になります。
+  
 - 🔁 Vehicle Turning movement representation: Transition links for vehicle right-turn, left-turn, and straight movement are inserted to represent detailed behavior at intersections.
+ 
 　　車両の遷移動作の明示：直進・右左折を表す遷移リンクを交差点に挿入し、車両の交差点内の詳細な動作を再現します。
+  
 - 🚸 Pedestrian crossing movement representation: Crossing links for pedestrians are placed around vehicular transitions, clearly capturing pedestrian crossing behavior.
+ 
 　　歩行者の横断行動の明示：車両の遷移リンクの外側に歩行者用の横断リンクを設け、横断行動を明確に表現します。
+  
 - 📍 Midlink segmentation: Road segments are divided at their midpoints, enabling precise modeling of trip origins and destinations even along road sections.
+
 　　中点での道路分割：歩行空間・車道リンクは中点で分割され、交差点以外の道路区間でも正確な出発・到着（OD）表現が可能になります。
 
 ## Citation 引用
