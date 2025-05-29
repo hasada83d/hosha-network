@@ -12,6 +12,7 @@ processing.py
 
 import os
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 import networkx as nx
 from shapely.geometry import LineString, Point
@@ -868,8 +869,8 @@ def split_links(final_nodes, final_links):
 
 
 
-# === 最終データのエクスポート ===
-def export_final_network(final_nodes, final_links, config, suffix="raw"):
+# === 最終データのエクスポート（GMNS対応版） ===
+def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config, suffix="raw"):
     """
     最終ネットワークのノード・リンクデータをエクスポートする。
     ノードは CSV、リンクはジオメトリ（LineString）を付与した GeoJSON として出力する。
@@ -884,34 +885,83 @@ def export_final_network(final_nodes, final_links, config, suffix="raw"):
       suffix : str, optional
           出力ファイル名に付加するサフィックス（例："raw" または "display"）
     """
-    import geopandas as gpd
+    
     
     output_dir = config["output"]["dir"]
     input_crs = config["crs"]["input_crs"]
     export_crs = config["crs"]["export_crs"]
-    
     os.makedirs(output_dir, exist_ok=True)
+    
+    # Define GMNS and custom fields for link and node outputs
+    link_cols = [
+        "link_id", "from_node_id", "to_node_id", "directed", "geometry", "parent_link_id", "dir_flag", "length", "facility_type", 
+        "modes", 'layer_id','macro_link_id', 'macro_node_id',  'bidirectionalpair_id', 'turn', 'split']
+    
+    node_cols = [
+        "node_id", "x_coord", "y_coord", "node_type", "parent_node_id", 
+        "modes", 'layer_id','macro_link_id', 'macro_node_id', "in_out", "split"]
+
+    # === リンクデータ修正 ===
+    final_links = final_links.rename(columns={"id": "link_id", "s": "from_node_id", "t": "to_node_id", "weight": "length", "macro_link":"macro_link_id"})
+    final_links["directed"] = True
+    final_links["dir_flag"] = 1
+    final_links["parent_link_id"] = final_links["macro_link_id"].replace({-1: ""})
+
+    def assign_facility(row):
+        if row["turn"] in ["left", "straight", "right", "cross", "notcross"]:
+            return f"intersection_{row['turn']}"
+        elif row["layer_id"] == 1:
+            return "sidewalk"
+        else:
+            return "road"
+    final_links["facility_type"] = final_links.apply(assign_facility, axis=1)
+    
+    def assign_modes(row):
+        return "pedestrian" if row["layer_id"] == 1 else "vehicle"
+    final_links["modes"] = final_links.apply(assign_modes, axis=1)
+
+    # === ノードデータ修正 ===
+    final_nodes = final_nodes.rename(columns={"id": "node_id", "x":"x_coord", "y":"y_coord", "macro_node":"macro_node_id"})
+    
+    final_nodes["parent_node_id"] = final_nodes["macro_node_id"].replace({-1: ""})
+
+    def assign_node_type(row):
+        if row.get("split", 0) == 1:
+            return "split"
+        elif row["macro_node_id"] != -1:
+            return f"intersection_{row['in_out']}"
+        else:
+            return ""
+    final_nodes["node_type"] = final_nodes.apply(assign_node_type, axis=1)
+    final_nodes["modes"] = final_nodes.apply(assign_modes, axis=1)
+
+    # === ノード出力 ===    
     nodes_csv_path = os.path.join(output_dir, f"final_nodes_{suffix}.csv")
     gdf_nodes = gpd.GeoDataFrame(final_nodes.copy(),
-                             geometry=final_nodes.apply(lambda row: Point(row["x"], row["y"]), axis=1),
+                             geometry=final_nodes.apply(lambda row: Point(row["x_coord"], row["y_coord"]), axis=1),
                              crs=input_crs)
     gdf_nodes = gdf_nodes.to_crs(export_crs)
     
     gdf_nodes.loc[gdf_nodes["layer_id"] == 1, "in_out"] = ""
     
     nodes_csv_path = os.path.join(output_dir, f"final_nodes_{suffix}.csv")
-    gdf_nodes["x"]=gdf_nodes.geometry.x
-    gdf_nodes["y"]=gdf_nodes.geometry.y
-    gdf_nodes.drop(columns="geometry").to_csv(nodes_csv_path, index=False)
+    gdf_nodes["x_coord"]=gdf_nodes.geometry.x
+    gdf_nodes["y_coord"]=gdf_nodes.geometry.y
+    
+    gdf_nodes.drop(columns="geometry")[node_cols]
+    
+    gdf_nodes=gdf_nodes.merge(ori_nodes[[c for c in ori_nodes.columns if c not in node_cols+["id","geometry"]]+["node_id"]].rename(columns={"node_id":"macro_node_id"}), on="macro_node_id",how="left")
+    gdf_nodes.to_csv(nodes_csv_path, index=False)
     print(f"Final nodes exported to {nodes_csv_path}")
-
-    nodes_coords = final_nodes.set_index("id")[["x", "y"]]
+    
+    # === リンク出力 ===
+    nodes_coords = final_nodes.set_index("node_id")[["x_coord", "y_coord"]]
     geometries = []
     for idx, row in final_links.iterrows():
         try:
-            s_coords = nodes_coords.loc[row["s"]]
-            t_coords = nodes_coords.loc[row["t"]]
-            geom = LineString([[s_coords["x"], s_coords["y"]], [t_coords["x"], t_coords["y"]]])
+            s_coords = nodes_coords.loc[row["from_node_id"]]
+            t_coords = nodes_coords.loc[row["to_node_id"]]
+            geom = LineString([[s_coords["x_coord"], s_coords["y_coord"]], [t_coords["x_coord"], t_coords["y_coord"]]])
         except Exception as e:
             geom = None
         geometries.append(geom)
@@ -920,10 +970,12 @@ def export_final_network(final_nodes, final_links, config, suffix="raw"):
     for col, default in [('weight', 1), ('macro_node_id', -1), ('macro_link', ''), ('layer_id', ''), ('bidirectionalpair_id', -1), ('split', 0)]:
         if col not in final_links.columns:
             final_links[col] = default
-    # 必要なカラムの順番に並び替え（lengthは不要）
-    final_links = final_links[['id', 's', 't', 'weight', 'layer_id','macro_link', 'macro_node_id',  'bidirectionalpair_id', 'turn', 'split']]
     
     final_links = final_links.assign(geometry=geometries)
+    # 必要なカラムの順番に並び替え
+    final_links = final_links[link_cols]
+    final_links=final_links.merge(ori_links[[c for c in ori_links.columns if c not in link_cols+["id", "s", "t",'weight', 'dummy', 'access']]].rename(columns={"macro_link":"macro_link_id"}), on="macro_link_id",how="left")
+    
     gdf_links = gpd.GeoDataFrame(final_links, geometry="geometry", crs=input_crs)
     gdf_links = gdf_links.to_crs(export_crs)
     links_geojson_path = os.path.join(output_dir, f"final_links_{suffix}.geojson")

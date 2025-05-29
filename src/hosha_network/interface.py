@@ -73,15 +73,15 @@ def develop_hosha_network(link_gdf, node_gdf, input_crs, output_dir, export_crs,
     final_nodes, final_links = birdirectionzie_ped_links(final_nodes, final_links)
 
     # --- エクスポート（raw） ---
-    export_final_network(final_nodes, final_links, config, suffix="raw")
+    export_final_network(final_nodes, final_links, node_gdf, link_gdf, config, suffix="raw")
 
     # --- 表示用出力（オプション） ---
     if export_display:
         display_nodes = adjust_display_coordinates(final_nodes, processed_node, scale_factor=10)
-        export_final_network(display_nodes, final_links, config, suffix="display")
+        export_final_network(display_nodes, final_links, node_gdf, link_gdf, config, suffix="display")
 
     # --- 統計出力 ---
-    print("【歩行者ネットワーク】ノード:", final_ped_nodes.shape[0], "リンク:", final_ped_links.shape[0])
-    print("【車両ネットワーク】ノード:", updated_veh_nodes.shape[0], "リンク:", updated_veh_links.shape[0])
-    print("【統合ネットワーク】ノード:", final_nodes.shape[0], "リンク:", final_links.shape[0])
+    #print("【歩行者ネットワーク】ノード:", final_ped_nodes.shape[0], "リンク:", final_ped_links.shape[0])
+    #print("【車両ネットワーク】ノード:", updated_veh_nodes.shape[0], "リンク:", updated_veh_links.shape[0])
+    print("【構築ネットワーク】ノード:", final_nodes.shape[0], "リンク:", final_links.shape[0])
 
