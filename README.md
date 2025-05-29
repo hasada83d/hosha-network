@@ -63,16 +63,16 @@ This function generates a layered pedestrian-vehicle network from macro-level ro
 **Parameters 引数:**
 
 English
-- `link_gdf`: GeoDataFrame with columns: `link_id`, `from_node_id`, to_node_id`, `geometry`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
-- `node_df`: DataFrame with columns: `node_id`, `x_coord, `y_coord`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
+- `link_gdf`: GeoDataFrame with columns: `link_id`, `from_node_id`, `to_node_id`, `geometry`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
+- `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
 - `crs`: Coordinate Reference System (EPSG code). The module currently supports only planar (Cartesian) coordinate systems such as UTM.
 - `output_dir`: Output directory for saving results.
 - `contract`: Whether to contract intermediate nodes (default: False).
 - `export_display`: Whether to export scaled coordinate data for visualization (default: True).
 
 日本語
-- `link_gdf`: `link_id`, `from_node_id`, to_node_id`, `geometry` を含む GeoDataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
-- `node_df`: `node_id`, `x_coord, `y_coord`を含む DataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
+- `link_gdf`: `link_id`, `from_node_id`, `to_node_id`, `geometry` を含む GeoDataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
+- `node_df`: `node_id`, `x_coord`, `y_coord`を含む DataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
 - `crs`: 使用する座標系（EPSGコード）. 本モジュールは平面直交座標系のみ対応しています. 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
 - `contract`: 中間ノードの縮約を実行するか（デフォルト: False）. 
