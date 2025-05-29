@@ -69,7 +69,7 @@ English
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows [GMNS format](https://github.com/zephyr-data-specs/GMNS))
 - `crs`: Coordinate Reference System (EPSG code). The module currently supports only planar (Cartesian) coordinate systems such as UTM.
 - `output_dir`: Output directory for saving results.
-- `contract`: Whether to contract intermediate nodes (default: False).
+- `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
 - `export_display`: Whether to export scaled coordinate data for visualization (default: True).
 
 日本語
@@ -77,6 +77,6 @@ English
 - `node_df`: `node_id`, `x_coord`, `y_coord`を含む DataFrame ([GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)に準拠). 
 - `crs`: 使用する座標系（EPSGコード）. 本モジュールは平面直交座標系のみ対応しています. 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
-- `contract`: 中間ノードの縮約を実行するか（デフォルト: False）. 
+- `contract`: 横断用でない歩行者遷移リンクの縮約を実行するか（デフォルト: False）. 
 - `export_display`: 表示用のスケーリング出力も行うか（デフォルト: True）. 
 
