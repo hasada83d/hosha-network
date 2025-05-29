@@ -4,19 +4,19 @@ A Python library to construct detailed pedestrian-vehicle layered networks from 
 マクロレベルな道路データから，歩行者と車両の詳細な動態を表現する歩車分離ネットワークを構築する Python ライブラリです．
 
 ## Overview 概要
-**hosha-network** is a Python module for constructing a micro network that expresses the detailed dynamics of pedestrians and vehicles from a macro road network consisting of undirected links and intersection nodes. By extending intersections to generate entrance/exit nodes and adding transition links, it creates a directed network divided into layers for pedestrians and vehicles.
+**hosha-network** is a Python library for constructing a micro network that expresses the detailed dynamics of pedestrians and vehicles from a macro road network consisting of undirected links and intersection nodes. By extending intersections to add entrance/exit nodes and transition links, it creates a directed network divided into layers for pedestrians and vehicles.
 
-hosha-networkは，無向リンクと交差点ノードからなるマクロな街路ネットワークから，歩行者と車両の詳細な動態を表現するミクロなネットワークを構築するための Python モジュールです．交差点を拡張して出入口ノードを生成し，遷移リンクを付加することで，歩行者と車両のレイヤーに分かれた有向ネットワークを作成します．
+hosha-networkは，無向リンクと交差点ノードからなるマクロな街路ネットワークから，歩行者と車両の詳細な動きを表現できるミクロなネットワークを構築するための Python ライブラリです．交差点を拡張して遷移リンクや出入口ノードを挿入し，歩行者と車両のレイヤーに分かれた有向ネットワークを作成します．
 
  <img src="https://github.com/user-attachments/assets/b713aff6-0bf2-4642-9b90-cd57b8c5f451" width="50%" />
 
 ## Features 特徴
 
-- 🚶‍♂️ Separate layers for pedestrians and vehicles: Sidewalks are generated on both sides of vehicle lanes, enabling independent analysis for pedestrians and vehicles.
+- 🚶‍♂️🚗 Separate layers for pedestrians and vehicles: Sidewalks are generated on both sides of vehicle lanes, enabling independent analysis for pedestrians and vehicles.
  
-　　歩行空間のレイヤー分離：車道の両外側に歩行空間を設けることで，歩行者と車両を別レイヤーで扱い，それぞれの移動特性に基づいた解析が可能になります. 
+　　歩行者と車両のレイヤー分離：車道の両外側に歩行空間を設けることで，歩行者と車両を別レイヤーで扱い，それぞれの移動特性に基づいた解析が可能になります. 
   
-- 🔁 Vehicle Turning movement representation: Transition links for vehicle right-turn, left-turn, and straight movement are inserted to represent detailed behavior at intersections.
+- 🚥 Vehicle Turning movement representation: Transition links for vehicle right-turn, left-turn, and straight movement are inserted to represent detailed behavior at intersections.
  
 　　車両の遷移動作の明示：直進・右左折を表す遷移リンクを交差点に挿入し，車両の交差点内の詳細な動作を再現します. 
   
