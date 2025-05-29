@@ -58,9 +58,9 @@ develop_hosha_network(link_gdf, node_df, crs, output_dir, contract=False, export
 
 ## Function: `develop_hosha_network()` 関数の説明
 
-This function generates a layered pedestrian-vehicle network from macro-level road data in [GMNS format](https://github.com/zephyr-data-specs/GMNS), assuming a planar (Cartesian) coordinate system such as UTM.
+This function generates a layered pedestrian-vehicle network from macro-level road data in [GMNS format](https://github.com/zephyr-data-specs/GMNS), assuming a planar (Cartesian) coordinate system.
 
-本関数は、平面直交座標系（例: UTM）を前提として，GMNS形式[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
+本関数は、平面直交座標系で[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
 
 **Parameters 引数:**
 
