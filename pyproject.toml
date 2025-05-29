@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hosha-network"
 version = "0.1.0"
-description = "A Python module for constructing a detailed network that captures both pedestrian and vehicular movements from a macro-level road network."
+description = "A Python library to construct detailed pedestrian-vehicle layered networks from macro-level road data."
 authors = [
     { name="Hiroyuki Hasada", email="important83d@email.com" }
 ]
