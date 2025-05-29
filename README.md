@@ -32,7 +32,9 @@ hosha-networkは，無向リンクと交差点ノードからなるマクロな�
 Coming soon!
 
 ## Acknowledgment 謝辞
-この成果は，NEDO（国立研究開発法人新 エネルギー・産業技術総合開発機構）の委託業務 （JPNP23023）の結果得られたものです．
+This library includes the results of Cross-ministerial Strategic Innovation Promotion Program (SIP) 3rd Phase, “Development of Smart Mobility Platform” promoted by Council for Science, Technology and Innovation, Cabinet Office. （Project Management Agency：New Energy and Industrial Technology Development Organization (NEDO) (Project Code JPNP23023))
+
+本ライブラリには，内閣府総合科学技術・イノベーション会議の下で推進する「戦略的イノベーション創造プログラム(SIP)第３期／スマートモビリティプラットフォームの構築」（研究推進法人：国立研究開発法人新エネルギー・産業技術総合開発機構）(NEDO管理番号：JPNP23023)の成果が含まれています．
 
 ## References 参考文献
 - 羽佐田紘之, 池谷風馬, 鳥海梓, 本間裕大, and 大口敬. 2025. “歩車ネットワークの構築と「安心とこてくゾーン」の設定手法理論の検討.” In 第71回土木計画学研究発表会・講演集.
