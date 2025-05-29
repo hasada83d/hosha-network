@@ -1,10 +1,11 @@
+LICENSE
 README.md
 pyproject.toml
-src/hosha-network/__init__.py
-src/hosha-network/interface.py
-src/hosha-network/ioput.py
-src/hosha-network/processing.py
-src/hosha-network/utils.py
+src/hosha_network/__init__.py
+src/hosha_network/interface.py
+src/hosha_network/ioput.py
+src/hosha_network/processing.py
+src/hosha_network/utils.py
 src/hosha_network.egg-info/PKG-INFO
 src/hosha_network.egg-info/SOURCES.txt
 src/hosha_network.egg-info/dependency_links.txt
