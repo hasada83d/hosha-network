@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hosha-network
-Version: 0.1.0
+Version: 0.1.1
 Summary: A Python library to construct detailed pedestrian-vehicle layered networks from macro-level road data.
 Author-email: Hiroyuki Hasada <important83d@email.com>
 License: MIT License
@@ -47,7 +47,7 @@ A Python library to construct detailed pedestrian-vehicle layered networks from 
 ## Overview 概要
 **hosha-network** is a Python library for constructing a micro network that expresses the detailed dynamics of pedestrians and vehicles from a macro road network consisting of undirected links and intersection nodes. By extending intersections to add entrance/exit nodes and transition links, it creates a directed network divided into layers for pedestrians and vehicles.
 
-hosha-networkは，無向リンクと交差点ノードからなるマクロな街路ネットワークから，歩行者と車両の詳細な動きを表現できるミクロなネットワークを構築するための Python ライブラリです．交差点を拡張して遷移リンクや出入口ノードを挿入し，歩行者と車両のレイヤーに分かれた有向ネットワークを作成します．
+**hosha-network** は，無向リンクと交差点ノードからなるマクロな街路ネットワークから，歩行者と車両の詳細な動きを表現できるミクロなネットワークを構築するための Python ライブラリです．交差点を拡張して遷移リンクや出入口ノードを挿入し，歩行者と車両のレイヤーに分かれた有向ネットワークを作成します．
 
  <img src="https://github.com/user-attachments/assets/b713aff6-0bf2-4642-9b90-cd57b8c5f451" width="50%" />
 
@@ -94,30 +94,28 @@ pip install hosha-network
 ```python
 from hosha_network import develop_hosha_network
 
-develop_hosha_network(link_gdf, node_df, crs, output_dir, contract=False, export_display=True)
+develop_hosha_network(link_df, node_df, crs, output_dir="./output", contract=False)
 ```
 
-## Function: `develop_hosha_network()` 関数の説明
+## Function 関数
 
-This function generates a layered pedestrian-vehicle network from macro-level road data in [GMNS format](https://github.com/zephyr-data-specs/GMNS), assuming a planar (Cartesian) coordinate system.
+Function `develop_hosha_network()` generates a layered pedestrian-vehicle network from macro-level road data in [GMNS format](https://github.com/zephyr-data-specs/GMNS).
 
-本関数は、平面直交座標系で[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
+関数`develop_hosha_network()` は、[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
 
 **Parameters 引数:**
 
 English
-- `link_gdf`: GeoDataFrame with columns: `link_id`, `from_node_id`, `to_node_id`, `geometry`  (follows GMNS format)
+- `link_df`: DataFrame with columns: `link_id`, `from_node_id`, `to_node_id`  (follows GMNS format)
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows GMNS format)
-- `crs`: Coordinate Reference System (EPSG code). The module currently supports only planar (Cartesian) coordinate systems such as UTM.
+- `crs`: Coordinate Reference System (EPSG code). The function currently supports only planar (Cartesian) coordinate systems such as UTM.
 - `output_dir`: Output directory for saving results.
 - `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
-- `export_display`: Whether to export scaled coordinate data for visualization (default: True).
 
 日本語
-- `link_gdf`: `link_id`, `from_node_id`, `to_node_id`, `geometry` を含む GeoDataFrame (GMNS フォーマットに準拠). 
-- `node_df`: `node_id`, `x_coord`, `y_coord`を含む DataFrame (GMNS フォーマットに準拠). 
-- `crs`: 使用する座標系（EPSGコード）. 本モジュールは平面直交座標系のみ対応しています. 
+- `link_gdf`: `link_id`, `from_node_id`, `to_node_id` を含むデータフレーム (GMNS フォーマットに準拠). 
+- `node_df`: `node_id`, `x_coord`, `y_coord`を含むデータフレーム (GMNS フォーマットに準拠). 
+- `crs`: 使用する座標系（EPSGコード）. 平面直交座標系のみ対応しています. 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
 - `contract`: 横断用でない歩行者遷移リンクの縮約を実行するか（デフォルト: False）. 
-- `export_display`: 表示用のスケーリング出力も行うか（デフォルト: True）. 
 
