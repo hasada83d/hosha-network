@@ -65,14 +65,14 @@ Function `develop_hosha_network()` generates a layered pedestrian-vehicle networ
 **Parameters 引数:**
 
 English
-- `link_df`: DataFrame with columns: `link_id`, `from_node_id`, `to_node_id`, `geometry`  (follows GMNS format)
+- `link_df`: DataFrame with columns: `link_id`, `from_node_id`, `to_node_id`  (follows GMNS format)
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows GMNS format)
 - `crs`: Coordinate Reference System (EPSG code). The function currently supports only planar (Cartesian) coordinate systems such as UTM.
 - `output_dir`: Output directory for saving results.
 - `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
 
 日本語
-- `link_gdf`: `link_id`, `from_node_id`, `to_node_id`, `geometry` を含むデータフレーム (GMNS フォーマットに準拠). 
+- `link_gdf`: `link_id`, `from_node_id`, `to_node_id` を含むデータフレーム (GMNS フォーマットに準拠). 
 - `node_df`: `node_id`, `x_coord`, `y_coord`を含むデータフレーム (GMNS フォーマットに準拠). 
 - `crs`: 使用する座標系（EPSGコード）. 平面直交座標系のみ対応しています. 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
