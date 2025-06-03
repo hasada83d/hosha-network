@@ -53,7 +53,7 @@ pip install hosha-network
 ```python
 from hosha_network import develop_hosha_network
 
-develop_hosha_network(link_df, node_df, crs, output_dir, contract=False)
+develop_hosha_network(link_df, node_df, crs, output_dir="./output", contract=False)
 ```
 
 ## Function 関数
