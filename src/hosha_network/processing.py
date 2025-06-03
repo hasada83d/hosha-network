@@ -870,7 +870,7 @@ def split_links(final_nodes, final_links):
 
 
 # === 最終データのエクスポート（GMNS対応版） ===
-def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config, suffix="raw"):
+def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config):
     """
     最終ネットワークのノード・リンクデータをエクスポートする。
     ノードは CSV、リンクはジオメトリ（LineString）を付与した GeoJSON として出力する。
@@ -888,6 +888,8 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config,
     
     
     output_dir = config["output"]["dir"]
+    name = config["output"]["name"]
+    suffix = config["output"]["suffix"]
     input_crs = config["crs"]["input_crs"]
     export_crs = config["crs"]["export_crs"]
     os.makedirs(output_dir, exist_ok=True)
@@ -936,7 +938,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config,
     final_nodes["modes"] = final_nodes.apply(assign_modes, axis=1)
 
     # === ノード出力 ===    
-    nodes_csv_path = os.path.join(output_dir, f"final_nodes_{suffix}.csv")
+    nodes_csv_path = os.path.join(output_dir, f"{name}node{suffix}.csv")
     gdf_nodes = gpd.GeoDataFrame(final_nodes.copy(),
                              geometry=final_nodes.apply(lambda row: Point(row["x_coord"], row["y_coord"]), axis=1),
                              crs=input_crs)
@@ -944,7 +946,6 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config,
     
     gdf_nodes.loc[gdf_nodes["layer_id"] == 1, "in_out"] = ""
     
-    nodes_csv_path = os.path.join(output_dir, f"final_nodes_{suffix}.csv")
     gdf_nodes["x_coord"]=gdf_nodes.geometry.x
     gdf_nodes["y_coord"]=gdf_nodes.geometry.y
     
@@ -978,7 +979,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config,
     
     gdf_links = gpd.GeoDataFrame(final_links, geometry="geometry", crs=input_crs)
     gdf_links = gdf_links.to_crs(export_crs)
-    links_geojson_path = os.path.join(output_dir, f"final_links_{suffix}.geojson")
+    links_geojson_path = os.path.join(output_dir, f"{name}link{suffix}.geojson")
     gdf_links.to_file(links_geojson_path, driver="GeoJSON")
     print(f"Final links exported to {links_geojson_path}")
 

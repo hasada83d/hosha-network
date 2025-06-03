@@ -23,33 +23,36 @@ from .processing import (
     export_final_network
 )
 
-def develop_hosha_network(link_gdf, node_gdf, input_crs, output_dir, export_crs,
-                          contract=False, export_display=False):
+def develop_hosha_network(link_df, node_df, crs, output_dir="./output", contract=False,**kwargs):
     """
     歩車ネットワークを構築するユーザー用関数。
 
     Parameters:
-    - link_gdf (GeoDataFrame): GMNS形式のリンクデータ
-    - node_gdf (GeoDataFrame): GMNS形式のノードデータ
-    - input_crs (str or int): 入力データのCRS（例: "EPSG:4326"）
+    - link_df (DataFrame): GMNS形式のリンクデータ
+    - node_df (DataFrame): GMNS形式のノードデータ
+    - crs (str) : 入力データのCRS（例: "EPSG:4326"）
     - output_dir (str): 結果出力先フォルダ
-    - export_crs (str or int): 出力ファイルのCRS
     - contract (bool): 歩行者ネットワークの縮約を行うか（デフォルト: False）
-    - export_display (bool): 表示用データを出力するか（デフォルト: False）
+    - export_display (bool): 
     """
-
+    
+    export_crs = kwargs.get("export_crs", "EPSG:4326")  #出力データのCRS（例: "EPSG:4326"）
+    export_display = kwargs.get("export_display", False)  #表示用データを出力するか（デフォルト: False）
+    export_name = kwargs.get("export_name", "hosha_") #出力データの名前
+    
     os.makedirs(output_dir, exist_ok=True)
 
     config = {}
     config["output"]={}
     config["crs"]={}
     config["output"]["dir"] = output_dir
-    config["crs"]["input_crs"] = input_crs 
+    config["output"]["name"] = export_name
+    config["crs"]["input_crs"] = crs 
     config["crs"]["export_crs"] = export_crs
 
     # --- 前処理 ---
-    processed_link = preprocess_original_links(link_gdf)
-    processed_node = preprocess_original_nodes(node_gdf, processed_link)
+    processed_link = preprocess_original_links(link_df)
+    processed_node = preprocess_original_nodes(node_df, processed_link)
 
     # --- ネットワーク種別の分岐 ---
     walk_link, walk_node, veh_link, veh_node = branch_network_types(processed_link, processed_node)
@@ -73,12 +76,14 @@ def develop_hosha_network(link_gdf, node_gdf, input_crs, output_dir, export_crs,
     final_nodes, final_links = birdirectionzie_ped_links(final_nodes, final_links)
 
     # --- エクスポート（raw） ---
-    export_final_network(final_nodes, final_links, node_gdf, link_gdf, config, suffix="raw")
+    config["output"]["suffix"] = ""
+    export_final_network(final_nodes, final_links, node_df, link_df, config)
 
     # --- 表示用出力（オプション） ---
     if export_display:
+        config["output"]["suffix"] = "_display"
         display_nodes = adjust_display_coordinates(final_nodes, processed_node, scale_factor=10)
-        export_final_network(display_nodes, final_links, node_gdf, link_gdf, config, suffix="display")
+        export_final_network(display_nodes, final_links, node_df, link_df, config)
 
     # --- 統計出力 ---
     #print("【歩行者ネットワーク】ノード:", final_ped_nodes.shape[0], "リンク:", final_ped_links.shape[0])

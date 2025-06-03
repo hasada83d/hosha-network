@@ -14,12 +14,10 @@ def test_sample_run():
     link_gdf = gpd.read_file("sample_data/koenji_macro_link.geojson").to_crs("EPSG:6677")
 
     develop_hosha_network(
-        link_gdf=link_gdf,
-        node_gdf=node_gdf,
-        input_crs="EPSG:6677",
+        link_df=link_gdf,
+        node_df=node_gdf,
+        crs="EPSG:6677",
         output_dir="sample_output",
-        export_crs="EPSG:4326",
-        contract=False,
-        export_display=True
+        contract=False
     )
 test_sample_run()
