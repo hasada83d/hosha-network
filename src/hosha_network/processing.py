@@ -18,6 +18,33 @@ import networkx as nx
 from shapely.geometry import LineString, Point
 from .utils import RD, average_angle
 
+
+def get_utm_epsg(latitude: float, longitude: float) -> int:
+    """
+    緯度経度から対応するUTMゾーンのEPSGコードを取得する関数（WGS84基準）
+    
+    Parameters:
+        latitude (float): 緯度（-90〜90）
+        longitude (float): 経度（-180〜180）
+
+    Returns:
+        int: EPSGコード（例：32654 for UTM zone 54N）
+    """
+    if not -80.0 <= latitude <= 84.0:
+        raise ValueError("UTM座標系は緯度84N〜80Sまでが対象です。")
+    
+    # UTMゾーンの計算
+    zone = int((longitude + 180) / 6) + 1
+    
+    # 北半球ならEPSG: 326XX, 南半球ならEPSG: 327XX
+    if latitude >= 0:
+        epsg_code = 32600 + zone
+    else:
+        epsg_code = 32700 + zone
+
+    return  "EPSG:"+str(epsg_code)
+
+
 def calc_macro_link(df, s_col="s", t_col="t"):
     """
     指定されたDataFrameに対して、2つのカラム（s_col, t_col）の値を用いてmacro_linkを生成する。
@@ -890,7 +917,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     output_dir = config["output"]["dir"]
     name = config["output"]["name"]
     suffix = config["output"]["suffix"]
-    input_crs = config["crs"]["input_crs"]
+    input_crs = config["crs"]["projected_crs"]
     export_crs = config["crs"]["export_crs"]
     os.makedirs(output_dir, exist_ok=True)
     
