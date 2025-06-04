@@ -923,18 +923,18 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     
     # Define GMNS and custom fields for link and node outputs
     link_cols = [
-        "link_id", "from_node_id", "to_node_id", "directed", "geometry", "parent_link_id", "dir_flag", "length", "facility_type", 
+        "link_id", "from_node_id", "to_node_id", "directed", "geometry", "dir_flag", "length", "facility_type", 
         "modes", 'layer_id','macro_link_id', 'macro_node_id',  'bidirectionalpair_id', 'turn', 'split']
     
     node_cols = [
-        "node_id", "x_coord", "y_coord", "node_type", "parent_node_id", 
+        "node_id", "x_coord", "y_coord", "node_type",  
         "modes", 'layer_id','macro_link_id', 'macro_node_id', "in_out", "split"]
 
     # === リンクデータ修正 ===
     final_links = final_links.rename(columns={"id": "link_id", "s": "from_node_id", "t": "to_node_id", "weight": "length", "macro_link":"macro_link_id"})
     final_links["directed"] = True
     final_links["dir_flag"] = 1
-    final_links["parent_link_id"] = final_links["macro_link_id"].replace({-1: ""})
+    #final_links["parent_link_id"] = final_links["macro_link_id"].replace({-1: ""})
 
     def assign_facility(row):
         if row["turn"] in ["left", "straight", "right", "cross", "notcross"]:
@@ -952,7 +952,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     # === ノードデータ修正 ===
     final_nodes = final_nodes.rename(columns={"id": "node_id", "x":"x_coord", "y":"y_coord", "macro_node":"macro_node_id"})
     
-    final_nodes["parent_node_id"] = final_nodes["macro_node_id"].replace({-1: ""})
+    #final_nodes["parent_node_id"] = final_nodes["macro_node_id"].replace({-1: ""})
 
     def assign_node_type(row):
         if row.get("split", 0) == 1:
@@ -978,7 +978,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     
     gdf_nodes.drop(columns="geometry")[node_cols]
     
-    gdf_nodes=gdf_nodes.merge(ori_nodes[[c for c in ori_nodes.columns if c not in node_cols+["id","geometry"]]+["node_id"]].rename(columns={"node_id":"macro_node_id"}), on="macro_node_id",how="left")
+    gdf_nodes=gdf_nodes.merge(ori_nodes[[c for c in ori_nodes.columns if c not in node_cols+["geometry"]]+["node_id"]].rename(columns={"node_id":"macro_node_id","id":"parent_node_id"}), on="macro_node_id",how="left")
     gdf_nodes.to_csv(nodes_csv_path, index=False)
     print(f"Final nodes exported to {nodes_csv_path}")
     
@@ -1002,7 +1002,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     final_links = final_links.assign(geometry=geometries)
     # 必要なカラムの順番に並び替え
     final_links = final_links[link_cols]
-    final_links=final_links.merge(ori_links[[c for c in ori_links.columns if c not in link_cols+["id", "s", "t",'weight', 'dummy', 'access']]].rename(columns={"macro_link":"macro_link_id"}), on="macro_link_id",how="left")
+    final_links=final_links.merge(ori_links[[c for c in ori_links.columns if c not in link_cols+["s", "t",'weight', 'dummy', 'access']]].rename(columns={"macro_link":"macro_link_id","id":"parent_link_id"}), on="macro_link_id",how="left")
     
     gdf_links = gpd.GeoDataFrame(final_links, geometry="geometry", crs=input_crs)
     gdf_links = gdf_links.to_crs(export_crs)
