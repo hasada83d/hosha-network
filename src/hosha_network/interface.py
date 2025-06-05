@@ -93,8 +93,8 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
     walk_link, walk_node, veh_link, veh_node = branch_network_types(processed_link, processed_node)
 
     # --- 歩行者ネットワークの構築 ---
-    contract_option = "partial" if contract else "none"
-    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node, config["method"]["contract"],config)
+    contract_option = "partial" if config["method"]["contract"] else "none"
+    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node, contract_option,config)
 
     # --- 車両ネットワークの構築 ---
     updated_veh_nodes, updated_veh_links = process_vehicle_network(veh_link, veh_node,config)
