@@ -17,8 +17,8 @@ def test_sample_run():
         link_df=link_gdf,
         node_df=node_gdf,
         output_dir="sample_output",
-        contract=False,
-        
+
+        contract=False,        
         input_crs="EPSG:4326",
         output_crs="EPSG:4326",
         output_display=False,
