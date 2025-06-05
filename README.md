@@ -62,7 +62,7 @@ develop_hosha_network(link_df, node_df, output_dir="./output", contract=False)
 
 Function `develop_hosha_network()` generates a layered pedestrian-vehicle network from macro-level road data in [GMNS format](https://github.com/zephyr-data-specs/GMNS).
 
-関数`develop_hosha_network()` は、[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
+関数`develop_hosha_network()` は，[GMNS フォーマット](https://github.com/zephyr-data-specs/GMNS)のマクロ道路データから歩車分離ネットワークを構築します. 
 
 **Parameters 引数:**
 
@@ -71,9 +71,11 @@ English
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows GMNS format with EPSG:4326)
 - `output_dir`: Output directory for saving results.
 - `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
+Other optional keyword arguments can be used for fine-tuning the construction process.
 
 日本語
 - `link_df`: `link_id`, `from_node_id`, `to_node_id`, `length` を含むデータフレーム (GMNS フォーマットに準拠). 
 - `node_df`: `node_id`, `x_coord`, `y_coord`を含むデータフレーム (GMNS フォーマットに準拠、EPSG:4326のみ対応). 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
 - `contract`: 横断用でない歩行者遷移リンクの縮約を実行するか（デフォルト: False）. 
+他のオプションのキーワード引数を使用することで，構築方法を調整することが可能です. 
