@@ -24,7 +24,7 @@ from .processing import (
     get_utm_epsg
 )
 
-def develop_hosha_network(link_df, node_df, output_dir="./output", contract=False,**kwargs):
+def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
     """
     A user-facing function to construct a pedestrian-vehicle integrated network.
 
@@ -32,7 +32,6 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", contract=Fals
     - link_df (DataFrame): Link data in GMNS format.
     - node_df (DataFrame): Node data in GMNS format.
     - output_dir (str): Directory where the output files will be saved (default: "./output").
-    - contract (bool): Whether to contract the pedestrian network (default: False).
     - **kwargs: Optional keyword arguments for fine-tuning the construction process.
 
       Optional Keyword Arguments (kwargs):
@@ -41,6 +40,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", contract=Fals
       - output_display (bool): Whether to export display-friendly files for visualization (default: False).
       - output_name (str): Prefix for the names of output files (default: "hosha_").
 
+      - contract (bool): Whether to contract the pedestrian network (default: False).
       - left_driving (bool): Whether the network assumes left-hand traffic (default: True).
       - make_uturn (bool): Whether to allow U-turns in vehicle network construction (default: False).
       
@@ -61,12 +61,15 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", contract=Fals
     config["crs"]={}
     config["veh"]={}
     config["ped"]={}
+    config["method"]={}
     
     config["crs"]["input_crs"] = kwargs.get("input_crs", "EPSG:4326")  #入力データのCRS（例: "EPSG:4326"）
     config["crs"]["export_crs"] = kwargs.get("output_crs", "EPSG:4326")  #出力データのCRS（例: "EPSG:4326"）
     config["output"]["display"] = kwargs.get("output_display", False)  #表示用データを出力するか（デフォルト: False）
     config["output"]["name"] = kwargs.get("output_name", "hosha_") #出力データの名前
     config["output"]["dir"] = output_dir
+
+    config["method"]["contract"]=kwargs.get("contract",False)
 
     config["veh"]["offset_angle"]=kwargs.get("veh_offset_angle", 10)
     config["veh"]["scale"]=kwargs.get("veh_scale", 0.5)
@@ -91,7 +94,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", contract=Fals
 
     # --- 歩行者ネットワークの構築 ---
     contract_option = "partial" if contract else "none"
-    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node, contract_option,config)
+    final_ped_nodes, final_ped_links = process_pedestrian_network(walk_link, walk_node, config["method"]["contract"],config)
 
     # --- 車両ネットワークの構築 ---
     updated_veh_nodes, updated_veh_links = process_vehicle_network(veh_link, veh_node,config)
