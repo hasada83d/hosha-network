@@ -34,6 +34,8 @@ Coming soon!
 ## Acknowledgment 謝辞
 This library includes the results of Cross-ministerial Strategic Innovation Promotion Program (SIP) 3rd Phase, “Development of Smart Mobility Platform” promoted by Council for Science, Technology and Innovation, Cabinet Office. （Project Management Agency：New Energy and Industrial Technology Development Organization (NEDO) (Project Code JPNP23023))
 
+<img src="https://github.com/user-attachments/assets/80e29de7-1e28-43b5-bab1-aef8f11690b1" width="100px"> 
+
 本ライブラリには，内閣府総合科学技術・イノベーション会議の下で推進する「戦略的イノベーション創造プログラム(SIP)第３期／スマートモビリティプラットフォームの構築」（研究推進法人：国立研究開発法人新エネルギー・産業技術総合開発機構）(NEDO管理番号：JPNP23023)の成果が含まれています．
 
 ## References 参考文献
@@ -53,7 +55,7 @@ pip install hosha-network
 ```python
 from hosha_network import develop_hosha_network
 
-develop_hosha_network(link_df, node_df, output_dir="./output")
+develop_hosha_network(link_df, node_df, output_dir="./output", contract=False)
 ```
 
 ## Function 関数
@@ -68,9 +70,10 @@ English
 - `link_df`: DataFrame with columns: `link_id`, `from_node_id`, `to_node_id`, `length`  (follows GMNS format)
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows GMNS format with EPSG:4326)
 - `output_dir`: Output directory for saving results.
+- `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
 
 日本語
 - `link_df`: `link_id`, `from_node_id`, `to_node_id`, `length` を含むデータフレーム (GMNS フォーマットに準拠). 
 - `node_df`: `node_id`, `x_coord`, `y_coord`を含むデータフレーム (GMNS フォーマットに準拠、EPSG:4326のみ対応). 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
-
+- `contract`: 横断用でない歩行者遷移リンクの縮約を実行するか（デフォルト: False）. 
