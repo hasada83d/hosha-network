@@ -17,6 +17,20 @@ def test_sample_run():
         link_df=link_gdf,
         node_df=node_gdf,
         output_dir="sample_output",
-        contract=False
+        contract=False,
+        
+        input_crs="EPSG:4326",
+        output_crs="EPSG:4326",
+        output_display=False,
+        output_name="hosha_",
+        make_uturn=False,
+        left_driving=True,
+        veh_offset_angle=10,
+        veh_scale=0.5,
+        veh_threshold_deg=45,
+        ped_offset_angle=10,
+        ped_scale=1.0,
+        ped_threshold_deg=45,
     )
+
 test_sample_run()

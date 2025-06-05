@@ -228,7 +228,7 @@ def compute_link_centers(net_link, net_node):
     return net_link
 
 # === 共通処理：新規ノード生成 ===
-def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1, extra_filter_func=None, new_node_start=0,access_suffix=0):
+def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1, extra_filter_func=None, new_node_start=0,access_suffix=0,left_driving=True):
     """
     指定された属性（例："intersection"）に基づいて新規 in/out ノードを生成する関数。
     本改修では、各接続リンクの access 属性と、リンク端点（s/t）が base node と一致するかで、
@@ -240,6 +240,9 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
     new_nodes = []
     new_node_index = new_node_start
     unique_vals = nodes_df[attribute].unique()
+    
+    left_driving=2*int(left_driving)-1
+    
     for attr_val in unique_vals:
         if attr_val == -1:
             continue
@@ -296,7 +299,7 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
             # 以下、各生成条件に応じてノードを生成
             if create_out:
                 # out ノード: 角度 + offset_angle
-                out_x, out_y = RD.getXY(scale, degree + offset_angle)
+                out_x, out_y = RD.getXY(scale, degree + offset_angle*left_driving)
                 new_nodes.append({
                     "id": new_node_index,
                     "x": out_x,
@@ -308,7 +311,7 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
                 new_node_index += 1
             if create_in:
                 # in ノード: 角度 - offset_angle
-                in_x, in_y = RD.getXY(scale, degree - offset_angle)
+                in_x, in_y = RD.getXY(scale, degree - offset_angle*left_driving)
                 new_nodes.append({
                     "id": new_node_index,
                     "x": in_x,
@@ -321,7 +324,7 @@ def generate_inout_nodes(attribute, nodes_df, link_df, offset_angle=10, scale=1,
     return new_nodes, new_node_index
 
 
-def generate_augmented_nodes(net_link, net_node, offset_angle, scale, access_suffix):
+def generate_augmented_nodes(net_link, net_node, offset_angle, scale, access_suffix,left_driving):
     """
     新規ノード生成のみを行う関数。
     "intersection" 属性を持つノードに対して、RD クラスと generate_inout_nodes を利用し、
@@ -337,7 +340,8 @@ def generate_augmented_nodes(net_link, net_node, offset_angle, scale, access_suf
         scale=scale,
         extra_filter_func=None,
         new_node_start=0,
-        access_suffix=access_suffix
+        access_suffix=access_suffix,
+        left_driving=left_driving
     )
     if new_nodes:
         new_nodes_df = pd.DataFrame(new_nodes)
@@ -479,7 +483,7 @@ def generate_turn_links(nodes_df, ori_nodes_df, threshold_deg=45):
     return pd.DataFrame(link_list)
 
 
-def generate_turn_links_veh(nodes_df, ori_nodes_df, ori_links_df):
+def generate_turn_links_veh(nodes_df, ori_nodes_df, ori_links_df,make_uturn=False, threshold_deg=45):
     """
     車両ネットワーク用のターンリンク生成関数。
     各交差点（nodes_df の original_id ごと）で、in ノードと out ノードの全組み合わせに対して、
@@ -509,7 +513,12 @@ def generate_turn_links_veh(nodes_df, ori_nodes_df, ori_links_df):
                 continue
             in_cx, in_cy = link_centers[in_link_id]["center_x"], link_centers[in_link_id]["center_y"]
             angle_in = np.arctan2(in_cy - center[1], in_cx - center[0])
-            for j, out_node in out_nodes[out_nodes["_original_link_id"]!=in_link_id].iterrows():
+            if make_uturn:
+                out_nodes_cand=out_nodes
+            else:
+                out_nodes_cand=out_nodes[out_nodes["_original_link_id"]!=in_link_id]
+            
+            for j, out_node in out_nodes_cand.iterrows():
                 out_link_id = out_node["_original_link_id"]
                 if out_link_id not in link_centers:
                     continue
@@ -518,12 +527,16 @@ def generate_turn_links_veh(nodes_df, ori_nodes_df, ori_links_df):
                 diff = np.arctan2(np.sin(angle_out - angle_in), np.cos(angle_out - angle_in))
                 if diff < 0:
                     diff += 2 * np.pi
-                if diff < 3*np.pi/4:
+                if diff < np.pi/180:
+                    turn = "u-turn"    
+                elif diff < np.pi-threshold_deg*np.pi/180:
                     turn = "right"
-                elif diff < 5*np.pi/4:
+                elif diff < np.pi+threshold_deg*np.pi/180:
                     turn = "straight"
-                else:
+                elif diff < 2*np.pi-np.pi/180:
                     turn = "left"
+                else:
+                    turn = "u-turn" 
                 link_list.append({
                     "id": link_index,
                     "s": i,
@@ -1011,7 +1024,7 @@ def export_final_network(final_nodes, final_links, ori_nodes, ori_links, config)
     print(f"Final links exported to {links_geojson_path}")
 
 # === ネットワーク全体処理パイプライン（歩行者） ===
-def process_pedestrian_network(walk_link, walk_node, contract="partial"):
+def process_pedestrian_network(walk_link, walk_node, contract="partial", config={}):
     """
     歩行者ネットワークの全体処理パイプライン
       1. compute_link_centers によりリンク中心座標を計算
@@ -1025,8 +1038,8 @@ def process_pedestrian_network(walk_link, walk_node, contract="partial"):
     #print(len(walk_link))
     updated_links = compute_link_centers(walk_link, walk_node)
     #print(len(updated_links))
-    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=10, scale=1.0,access_suffix=1)
-    turn_links = generate_turn_links(updated_nodes, walk_node)
+    updated_nodes = generate_augmented_nodes(updated_links, walk_node, offset_angle=config["ped"]["offset_angle"], scale=config["ped"]["scale"],access_suffix=1,left_driving=config["ped"]["left_driving"])
+    turn_links = generate_turn_links(updated_nodes, walk_node, threshold_deg=config["ped"]["threshold_deg"])
     #print(len(turn_links))
     normal_links = generate_normal_links(walk_link, updated_nodes)
     merged_links = integrate_turn_links(normal_links, turn_links)
@@ -1039,7 +1052,7 @@ def process_pedestrian_network(walk_link, walk_node, contract="partial"):
     return final_nodes, final_links
 
 # === ネットワーク全体処理パイプライン（車両） ===
-def process_vehicle_network(veh_link, veh_node):
+def process_vehicle_network(veh_link, veh_node,config):
     """
     車両ネットワークの全体処理パイプライン
       1. compute_link_centers によりリンク中心座標を計算
@@ -1051,8 +1064,8 @@ def process_vehicle_network(veh_link, veh_node):
       updated_veh_nodes, merged_veh_links : DataFrame（処理後の車両ネットワーク）
     """
     updated_links = compute_link_centers(veh_link, veh_node)
-    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=10, scale=0.5,access_suffix=0)
-    turn_links = generate_turn_links_veh(updated_nodes, veh_node, updated_links)
+    updated_nodes = generate_augmented_nodes(updated_links, veh_node, offset_angle=config["veh"]["offset_angle"], scale=config["veh"]["scale"],access_suffix=0,left_driving=config["veh"]["left_driving"])
+    turn_links = generate_turn_links_veh(updated_nodes, veh_node, updated_links,make_uturn=config["veh"]["make_uturn"], threshold_deg=config["veh"]["threshold_deg"])
     normal_links = generate_normal_links(veh_link, updated_nodes)
     merged_links = integrate_turn_links(normal_links, turn_links)
     return updated_nodes, merged_links
