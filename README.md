@@ -45,12 +45,9 @@ This library includes the results of Cross-ministerial Strategic Innovation Prom
 
 ---
 ## Installation インストール
-Coming soon!
-<!-- 
 ```bash
 pip install hosha-network
 ```
--->
 
 ## Usage 使い方
 
