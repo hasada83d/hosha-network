@@ -55,7 +55,7 @@ pip install hosha-network
 ```python
 from hosha_network import develop_hosha_network
 
-develop_hosha_network(link_df, node_df, output_dir="./output", contract=False)
+develop_hosha_network(link_df, node_df, output_dir="./output")
 ```
 
 ## Function 関数
@@ -70,7 +70,6 @@ English
 - `link_df`: DataFrame with columns: `link_id`, `from_node_id`, `to_node_id`, `length`  (follows GMNS format)
 - `node_df`: DataFrame with columns: `node_id`, `x_coord`, `y_coord`  (follows GMNS format with EPSG:4326)
 - `output_dir`: Output directory for saving results.
-- `contract`: Whether to contract pedestrian transit links in intersections not for crossing (default: False).
 
 Other optional keyword arguments can be used for fine-tuning the construction process.
 
@@ -78,6 +77,5 @@ Other optional keyword arguments can be used for fine-tuning the construction pr
 - `link_df`: `link_id`, `from_node_id`, `to_node_id`, `length` を含むデータフレーム (GMNS フォーマットに準拠). 
 - `node_df`: `node_id`, `x_coord`, `y_coord`を含むデータフレーム (GMNS フォーマットに準拠、EPSG:4326のみ対応). 
 - `output_dir`: 結果を保存する出力先ディレクトリ. 
-- `contract`: 横断用でない歩行者遷移リンクの縮約を実行するか（デフォルト: False）.
 
 他のオプションのキーワード引数を使用して，構築方法を調整することも可能です. 
