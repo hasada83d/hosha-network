@@ -42,7 +42,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
 
       - contract (bool): Whether to contract the pedestrian network (default: False).
       - left_driving (bool): Whether the network assumes left-hand traffic (default: True).
-      - make_uturn (bool): Whether to allow U-turns in vehicle network construction (default: False).
+      - make_uturn (bool): Whether to allow U-turns in vehicle network construction (default: True).
       
       - veh_offset_angle (float): Angular offset (in degrees) when generating vehicle turning links (default: 10).
       - veh_scale (float): Link length scaling factor for vehicle links (default: 0.5).
@@ -75,7 +75,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
     config["veh"]["scale"]=kwargs.get("veh_scale", 0.5)
     config["veh"]["left_driving"]=kwargs.get("left_driving", True)
     config["veh"]["threshold_deg"]=kwargs.get("veh_threshold_deg", 45)
-    config["veh"]["make_uturn"]=kwargs.get("make_uturn",False)
+    config["veh"]["make_uturn"]=kwargs.get("make_uturn", True)
     
     config["ped"]["offset_angle"]=kwargs.get("ped_offset_angle", 10)
     config["ped"]["scale"]=kwargs.get("ped_scale", 1.0)

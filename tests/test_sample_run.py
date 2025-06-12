@@ -23,7 +23,7 @@ def test_sample_run():
         output_crs="EPSG:4326",
         output_display=False,
         output_name="hosha_",
-        make_uturn=False,
+        make_uturn=True,
         left_driving=True,
         veh_offset_angle=10,
         veh_scale=0.5,
