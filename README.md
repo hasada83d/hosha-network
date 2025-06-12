@@ -1,4 +1,6 @@
 # hosha-network （歩車ネットワーク）
+[![PyPI version](https://badge.fury.io/py/hosha-network.svg)](https://pypi.org/project/hosha-network/)
+
 A Python library to construct detailed pedestrian-vehicle layered networks from macro-level road data.
 
 マクロレベルな道路データから，歩行者と車両の詳細な動態を表現する歩車分離ネットワークを構築する Python ライブラリです．
