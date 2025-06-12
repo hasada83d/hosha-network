@@ -8,7 +8,7 @@ A Python library to construct detailed pedestrian-vehicle layered networks from 
 
 **hosha-network** は，無向リンクと交差点ノードからなるマクロな街路ネットワークから，歩行者と車両の詳細な動きを表現できるミクロなネットワークを構築するための Python ライブラリです．交差点を拡張して遷移リンクや出入口ノードを挿入し，歩行者と車両のレイヤーに分かれた有向ネットワークを作成します．
 
- <img src="https://github.com/user-attachments/assets/b713aff6-0bf2-4642-9b90-cd57b8c5f451" width="50%" />
+ <img src="https://github.com/user-attachments/assets/85dcd9b9-1ee4-45f2-937a-35f261517985" width="50%" />
 
 ## Features 特徴
 
