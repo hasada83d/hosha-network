@@ -9,6 +9,7 @@ Created on Wed May 28 21:11:36 2025
 
 import os
 import geopandas as gpd
+import numpy as np
 from .processing import (
     preprocess_original_links,
     preprocess_original_nodes,
@@ -43,6 +44,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
       - contract (bool): Whether to contract the pedestrian network (default: False).
       - left_driving (bool): Whether the network assumes left-hand traffic (default: True).
       - make_uturn (bool): Whether to allow U-turns in vehicle network construction (default: True).
+      - split (bool): Whether to split links at their midpoints (default: True).
       
       - veh_offset_angle (float): Angular offset (in degrees) when generating vehicle turning links (default: 10).
       - veh_scale (float): Link length scaling factor for vehicle links (default: 0.5).
@@ -70,6 +72,7 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
     config["output"]["dir"] = output_dir
 
     config["method"]["contract"]=kwargs.get("contract",False)
+    config["method"]["split"] = kwargs.get("split", True)
 
     config["veh"]["offset_angle"]=kwargs.get("veh_offset_angle", 10)
     config["veh"]["scale"]=kwargs.get("veh_scale", 0.5)
@@ -107,7 +110,11 @@ def develop_hosha_network(link_df, node_df, output_dir="./output", **kwargs):
     final_nodes, final_links = finalize_network(integrated_nodes, integrated_links, processed_link, processed_node)
 
     # --- リンク分割と歩行者リンク双方向化 ---
-    final_nodes, final_links = split_links(final_nodes, final_links)
+    if config["method"]["split"]:
+        final_nodes, final_links = split_links(final_nodes, final_links)
+    else:
+        final_nodes["split"] = np.nan
+        final_links["split"] = np.nan
     final_nodes, final_links = birdirectionzie_ped_links(final_nodes, final_links)
 
     # --- エクスポート（raw） ---
