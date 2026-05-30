@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hosha-network
-Version: 1.0.0
+Version: 1.0.1
 Summary: A Python library to construct detailed pedestrian-vehicle layered networks from macro-level road data.
 Author-email: Hiroyuki Hasada <important83d@email.com>
 License: MIT License
