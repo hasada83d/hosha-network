@@ -31,8 +31,8 @@ A Python library to construct detailed pedestrian-vehicle layered networks from 
 　　中点での道路分割：歩行空間・車道リンクは中点で分割され，交差点以外の街路上でも正確な出発・到着（OD）表現が可能になります. 
 
 ## Citation 引用
-- Hasada, H., Flexible Foundational Tools for Identifying Detailed Pedestrian and Vehicle Movements Based on Street Structure (preprint).  
-  羽佐田紘之, 街路構造に基づいて歩行者・車両の詳細な移動を推定する柔軟な基盤技術の開発 (preprint).
+- Hasada, H. (2026). Foundational Tools for Identifying Detailed Routes Based on Street Structure: Pedestrian–Vehicle Network Construction and Map Matching. *Japanese Journal of JSCE, 82*(6), 25–00166. [doi:10.2208/jscejj.25-00166](https://www.jstage.jst.go.jp/article/jscejj/82/6/82_25-00166/_article/-char/en)  
+  羽佐田 紘之. (2026). 街路構造に基づく詳細な経路推定の基盤技術：歩車ネットワーク構築とマップマッチング. 土木学会論文集, 82(6), 25–00166. [doi:10.2208/jscejj.25-00166](https://www.jstage.jst.go.jp/article/jscejj/82/6/82_25-00166/_article/-char/ja)
 
 ## Acknowledgment 謝辞
 This library includes the results of Cross-ministerial Strategic Innovation Promotion Program (SIP) 3rd Phase, “Development of Smart Mobility Platform” promoted by Council for Science, Technology and Innovation, Cabinet Office. （Project Management Agency：New Energy and Industrial Technology Development Organization (NEDO) (Project Code JPNP23023))
